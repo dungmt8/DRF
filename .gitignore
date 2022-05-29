@@ -1,2 +1,12 @@
 venv
 .idea
+backend/db.sqlite3
+backend/products/migrations/
+backend/api/migrations
+backend/cfehome/__pycache__/
+backend/api/__pycache__/
+backend/products/__pycache__/
+backend/cfehome/__pycache__/settings.cpython-39.pyc
+backend/cfehome/__pycache__/urls.cpython-39.pyc
+backend/cfehome/__pycache__/urls.cpython-39.pyc
+*.pyc
