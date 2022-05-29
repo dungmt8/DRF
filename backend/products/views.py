@@ -1,4 +1,4 @@
-from rest_framework import generics
+from rest_framework import generics, mixins, permissions, authentication
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
@@ -15,16 +15,87 @@ class ProductListAPIView(generics.ListAPIView):
 class ProductCreateAPIView(generics.CreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    authentication_classes = [authentication.SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, instance):
+        title = instance.validated_data.get('title')
+        content = instance.validated_data.get('content')
+
+        if content is None:
+            content = title
+        instance.save(content=content)
+        # send a Django signal
 
 
 class ProductDetailAPIView(generics.RetrieveAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    lookup_field = 'pk'
+
+
+class ProductUpdateAPIView(generics.UpdateAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    lookup_field = 'pk'
+
+    def perform_update(self, instance):
+        title = instance.validated_data.get('title')
+        content = instance.validated_data.get('content')
+
+        if content is None:
+            content = title
+        instance.save(content=content)
+
+
+class ProductDestroyAPIView(generics.DestroyAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+
+    def perform_destroy(self, instance):
+        super().perform_destroy(instance)
 
 
 product_list_view = ProductListAPIView.as_view()
 product_create_view = ProductCreateAPIView.as_view()
 product_detail_view = ProductDetailAPIView.as_view()
+product_update_view = ProductUpdateAPIView.as_view()
+product_destroy_view = ProductDestroyAPIView.as_view()
+
+
+class ProductMixinView(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.ListModelMixin,
+    generics.GenericAPIView,
+):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    lookup_field = 'pk'
+
+    def get(self, request, *args, **kwargs):
+        print(args, kwargs)
+        pk = kwargs.get('pk')
+        if pk is not None:
+            return self.retrieve(request, *args, **kwargs)
+        return self.list(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        print(args, kwargs)
+        return self.create(request, *args, **kwargs)
+
+    def perform_create(self, instance):
+        title = instance.validated_data.get('title')
+        content = instance.validated_data.get('content')
+
+        if content is None:
+            content = title
+        instance.save(content=content)
+
+
+product_mixin_view = ProductMixinView.as_view()
 
 
 @api_view(['GET', 'POST'])
