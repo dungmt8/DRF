@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 
 from .models import Product
 from .serializers import ProductSerializer
+from .premissions import IsStaffEditorPermission
 
 
 class ProductListAPIView(generics.ListAPIView):
@@ -16,7 +17,7 @@ class ProductCreateAPIView(generics.CreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     authentication_classes = [authentication.SessionAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAdminUser ,IsStaffEditorPermission]
 
     def perform_create(self, instance):
         title = instance.validated_data.get('title')
@@ -37,6 +38,7 @@ class ProductDetailAPIView(generics.RetrieveAPIView):
 class ProductUpdateAPIView(generics.UpdateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    permission_classes = [IsStaffEditorPermission]
     lookup_field = 'pk'
 
     def perform_update(self, instance):
@@ -51,6 +53,7 @@ class ProductUpdateAPIView(generics.UpdateAPIView):
 class ProductDestroyAPIView(generics.DestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    permission_classes = [IsStaffEditorPermission]
 
     def perform_destroy(self, instance):
         super().perform_destroy(instance)
